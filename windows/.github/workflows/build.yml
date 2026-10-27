@@ -1,0 +1,38 @@
+name: Build Lux Ticker
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Unit tests
+        run: dotnet test tests/LuxTicker.Tests/LuxTicker.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Self-contained single-file exe
+        run: >
+          dotnet publish src/LuxTicker.App/LuxTicker.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:EnableWindowsTargeting=true
+          -p:DebugType=embedded
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LuxTicker-win-x64
+          path: src/LuxTicker.App/bin/Release/**/publish/LuxTicker.exe
+          if-no-files-found: error

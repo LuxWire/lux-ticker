@@ -1,0 +1,23 @@
+# Signing material and secrets: never commit
+*.jks
+*.keystore
+*.pfx
+*.p12
+*.pem
+*.key
+keystore.properties
+signing.properties
+local.properties
+.env
+.env.*
+!.env.example
+*secret*
+*anon-key*
+# Build output
+build/
+.gradle/
+bin/
+obj/
+*.apk
+*.aab
+*.exe

@@ -1,0 +1,79 @@
+<Window x:Class="LuxTicker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LuxWire Ticker"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="False"
+        Background="#F6F2E8"
+        Foreground="#282622"
+        Width="640"
+        Height="23"
+        Left="-32000"
+        Top="0"
+        Opacity="1"
+        Visibility="Hidden"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        FontFamily="Segoe UI"
+        PreviewMouseDoubleClick="Bar_MouseDoubleClick">
+    <Grid x:Name="Root" Background="#F6F2E8" ClipToBounds="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel x:Name="BarActions" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Stretch" Panel.ZIndex="10">
+            <Button x:Name="BtcButton"
+                    Content="Chart"
+                    FontSize="11"
+                    FontWeight="SemiBold"
+                    Foreground="#F7931A"
+                    Background="#F6F2E8"
+                    BorderThickness="0"
+                    Padding="8,0,8,0"
+                    Cursor="Hand"
+                    ToolTip="Chart"
+                    AutomationProperties.Name="Chart"
+                    Click="BtcButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#CCEFEADE"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button x:Name="SettingsButton"
+                    Content="Settings"
+                    FontSize="11"
+                    FontWeight="SemiBold"
+                    Foreground="#F7931A"
+                    Background="#F6F2E8"
+                    BorderThickness="0"
+                    Padding="8,0,12,0"
+                    Cursor="Hand"
+                    ToolTip="Settings"
+                    Click="SettingsButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#CCEFEADE"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <Company>Lux</Company>
+    <Product>LuxWire Ticker</Product>
+    <Version>1.4.14</Version>
+    <Copyright>Copyright © 2026</Copyright>
+  </PropertyGroup>
+</Project>

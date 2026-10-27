@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>LuxTicker</RootNamespace>
+    <AssemblyName>LuxTicker.Core</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="symbols.default.json">
+      <LogicalName>LuxTicker.symbols.default.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

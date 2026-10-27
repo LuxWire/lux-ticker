@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pull-down tape in system night mode. Navy, brighter gold, light label, lighter green and red. -->
+    <color name="lux_ticker_shade_bg">#FF0E1520</color>
+    <color name="lux_ticker_shade_accent">#FFFFD15C</color>
+    <color name="lux_ticker_shade_ink">#FFF4EFE4</color>
+    <color name="lux_ticker_shade_gain">#FF7DFFA3</color>
+    <color name="lux_ticker_shade_loss">#FFFF8A80</color>
+</resources>

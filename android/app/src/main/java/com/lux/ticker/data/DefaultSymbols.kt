@@ -1,0 +1,56 @@
+package com.lux.ticker.data
+
+object DefaultSymbols {
+    val btc = SymbolSpec("BTC", "BTC")
+
+    val all: List<SymbolSpec> = listOf(
+        "BTC" to "BTC",
+        "IBIT" to "IBIT",
+        "MSTR" to "MSTR",
+        "3350.T" to "3350.T",
+        "MPJPY" to "MPJPY",
+        "XXI" to "XXI",
+        "ASST" to "ASST",
+        "MARA" to "MARA",
+        "BLSH" to "BLSH",
+        "COIN" to "COIN",
+        "CLSK" to "CLSK",
+        "DJT" to "DJT",
+        "TSLA" to "TSLA",
+        "RIOT" to "RIOT",
+        "HUT" to "HUT",
+        "XYZ" to "XYZ",
+        "ABTC" to "ABTC",
+        "GDC" to "GDC",
+        "GLXY" to "GLXY",
+        "NXTT" to "NXTT",
+        "GEMI" to "GEMI",
+        "SVIA" to "SVIA",
+        "SWC.L" to "SWC.L",
+        "IREN" to "IREN",
+        "NAKA" to "NAKA",
+        "SLE" to "SLE",
+        "STRC" to "STRC",
+        "STRF" to "STRF",
+        "STRK" to "STRK",
+        "STRD" to "STRD",
+        "SATA" to "SATA",
+        "^GSPC" to "S&P 500",
+        "^DJI" to "DOW",
+        "^NDX" to "NDX",
+        "^RUT" to "RUT",
+        "CL=F" to "OIL",
+        "GLD" to "GLD",
+        "SLV" to "SLV",
+        "^VIX" to "VIX",
+        "AAPL" to "AAPL",
+        "MSFT" to "MSFT",
+        "GOOGL" to "GOOGL",
+        "AMZN" to "AMZN",
+        "NVDA" to "NVDA",
+        "META" to "META",
+        "SPCX" to "SPCX",
+    ).map { (symbol, label) -> SymbolSpec(symbol, label) }
+
+    val labels: Map<String, String> = all.associate { it.symbol to it.label }
+}

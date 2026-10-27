@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <RootNamespace>LuxTicker</RootNamespace>
+    <AssemblyName>LuxTicker</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\LuxTicker.ico</ApplicationIcon>
+    <StartupObject>LuxTicker.App</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LuxTicker.Core\LuxTicker.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\CascadiaMono-Bold.ttf">
+      <LogicalName>LuxTicker.Fonts.CascadiaMono-Bold.ttf</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\LuxTicker.ico">
+      <LogicalName>LuxTicker.Assets.LuxTicker.ico</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Assets\lux-wire-toast.png">
+      <LogicalName>LuxTicker.Assets.lux-wire-toast.png</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

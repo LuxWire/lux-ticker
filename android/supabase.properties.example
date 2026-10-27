@@ -1,0 +1,6 @@
+# Copy this file to supabase.properties and fill it in.
+# supabase.properties is gitignored. Do not commit it.
+# supabase.url is the project URL, for example https://YOUR_PROJECT_REF.supabase.co
+# supabase.anonKey is the publishable anon key. Do not put a service-role key here.
+supabase.url=
+supabase.anonKey=

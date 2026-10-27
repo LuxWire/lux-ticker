@@ -1,0 +1,18 @@
+LuxWire Ticker
+
+Version 1.4.14. An update keeps settings and the watchlist already saved. Continue with Google and Continue with X are on the account screen. Privacy and Terms are linked there and in About. An optional LuxWire account syncs settings and the watchlist. The ticker still works signed out. The bar sits directly above the taskbar, not on Start. Maximized windows stop there. The icon is the same orange LW tile everywhere, including the tray. Click-through lets clicks pass through the scrolling prices. Chart and Settings stay clickable. A new install uses the Wall Street tape, a dark board with amber and green. Colors already saved stay. Background color accepts any hex or RGB, and opacity still applies. What's new is in Updates, next to Check for updates. About is the ticker and LuxWire, with Follow on X and Subscribe. LuxWire post alerts is one switch when a token is already saved. Reset ALL settings to defaults asks first. Charts has an Open chart button. Live updates while scrolling flashes green on an uptick and red on a downtick. Always on top stays on, and Show Desktop leaves the bar in place. The ticker loops. Vertical position in Settings moves the bar from the dock (−240 to +640; 0 is the usual place). Paper matches Lux Wire article colors (#F6F2E8 / accent #F7931A). Position, size, opacity, and monitor are written to startup.log.
+
+To install, run LuxTicker-Setup-1.4.14.exe. No administrator password. Running it again upgrades the existing install and keeps settings. LuxWire Ticker is added to the Start Menu and to Apps & features. Check for updates is in Settings.
+
+LuxTicker.exe is not an installer — you can also run it directly.
+
+After downloading from Drive: right-click → Properties → Unblock → Apply.
+
+SmartScreen: More info → Run anyway.
+
+PowerShell: Unblock-File path\LuxTicker.exe
+then run it.
+
+Needs 64-bit Windows (x64).
+
+If it still fails, send the contents of %APPDATA%\LuxTicker\startup.log.

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.LuxTicker" parent="android:Theme.Material.NoActionBar">
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="android:statusBarColor">#FF12100E</item>
+        <item name="android:navigationBarColor">#FF12100E</item>
+        <item name="android:windowBackground">#FF12100E</item>
+        <item name="android:colorBackground">#FF12100E</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

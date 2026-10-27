@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- X bearer, client id, and OAuth tokens stay on the device. They are not backed up. -->
+    <exclude domain="sharedpref" path="lux_wire_auth.xml" />
+    <exclude domain="sharedpref" path="lux_wire_feed.xml" />
+    <exclude domain="sharedpref" path="lux_account_session.xml" />
+    <!-- Live settings stay on the phone. A backup restore must not replace them. -->
+    <exclude domain="file" path="datastore" />
+</full-backup-content>

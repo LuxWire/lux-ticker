@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LuxWire Ticker</string>
+    <string name="widget_name">LuxWire Ticker</string>
+    <string name="widget_name_narrow">LuxWire Ticker 1×2</string>
+    <string name="widget_name_square">LuxWire Ticker 2×2</string>
+    <string name="widget_description">Bitcoin stays fixed on the side you pick. The rest of the tape scrolls beside it.</string>
+    <string name="widget_description_narrow">A narrow tape. Bitcoin on top, the next names below.</string>
+    <string name="widget_description_square">A square tape. Bitcoin on top and a few names under it.</string>
+    <string name="tile_label">LuxWire Ticker</string>
+    <string name="channel_name">LuxWire Ticker</string>
+    <string name="channel_description">Silent control for the on-screen tape. No sound.</string>
+    <string name="channel_lock_name">LuxWire Ticker</string>
+    <string name="channel_lock_description">The tape in the shade and on the lock screen. No sound. Android keeps this notification so the ticker can run.</string>
+    <string name="channel_lux_wire_name">\@LuxWire</string>
+    <string name="channel_lux_wire_description">New @LuxWire posts from X. On unless you turn alerts off.</string>
+    <string name="channel_alerts_name">Price alerts</string>
+    <string name="channel_alerts_description">Quiet price alerts. No sound.</string>
+    <string name="channel_alerts_loud_name">Price alerts, loud</string>
+    <string name="channel_alerts_loud_description">Price alerts with sound. Off unless you turn loud alerts on.</string>
+    <string name="channel_alerts_popup_name">Price alerts, popup</string>
+    <string name="channel_alerts_popup_description">A popup when a saved price alert hits.</string>
+</resources>
