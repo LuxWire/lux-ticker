@@ -1,10 +1,48 @@
 # LuxWire Ticker 1.4.11
 
-Package `com.lux.ticker`. versionCode 34. The shade and lock-screen ticker use an ink band in light and night, with the text centered in a thinner row. A saved color that is under 4.5:1 on that band falls back. In-app strip themes are unchanged, and saved settings stay. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
+Installs over 1.4.10. Package `com.lux.ticker`. versionCode 34. The shade and lock-screen ticker use an ink band in light and night, with the text centered in a thinner row. A saved color that is under 4.5:1 on that band falls back. In-app strip themes are unchanged, and saved settings stay. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
 
-This public tree carries the 1.4.11 notification band changes on the previously published 1.4.8 sources. Battery / price-refresh code from 1.4.9–1.4.10 is not in this mirror yet.
+Sideload APK SHA-256: `c3416c6c886d06ab76d1a628c2fba82d19c384f60d7558adfaa16b8f66b49eb0`
 
-# LuxWire Ticker 1.4.8
+Same sideload certificate as 1.4.1 through 1.4.10, SHA-256 `d39d70febde76e274bdcf216a57761d7f27d2de015dba4a2b65646f665139597`.
+
+Play AAB SHA-256: `ed78dd711bdf17755eb2f106023ba4e268d59a9c2bf41dcf01ee4c1ef537e47c`
+
+The Play bundle is signed with the same upload key, certificate SHA-256 `0D:18:32:AF:9A:76:09:A5:0E:24:F8:9F:AD:80:B6:8C:1A:CB:FA:2A:DD:34:93:D9:8B:4E:70:79:0A:60:91:30`. It has not been uploaded.
+
+APK: `LuxTicker-Android-1.4.11.apk` (also copied as `LuxTicker.apk`). AAB: `play/LuxTicker-Android-1.4.11-vc34.aab`.
+
+This public Android tree is the real cleaned source for 1.4.9 through 1.4.11 (versionCode 34 at tip). It replaces the earlier reconstructed 1.4.11 notification-only sync.
+
+## 1.4.10
+
+Installs over 1.4.9. Package `com.lux.ticker`. versionCode 33. Android battery saver closes the live Bitcoin stream. A Price refresh choice of 1, 3, 5, 10, or 30 min waits that full time. The screen off pause and Doze do not fetch and do not keep a CPU wake. Saved settings are unchanged. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
+
+Sideload APK SHA-256: `b31dacfd9563c37929eca5a2309b3a35c6bf8a5997f2641809d5ef65c2ad71b5`
+
+Same sideload certificate as 1.4.1 through 1.4.9, SHA-256 `d39d70febde76e274bdcf216a57761d7f27d2de015dba4a2b65646f665139597`.
+
+Play AAB SHA-256: `f7ecfb6d8863d547c94ad7d7c2871324a8e80f97a0ac6407524a91328c4f76f6`
+
+The Play bundle is signed with the same upload key, certificate SHA-256 `0D:18:32:AF:9A:76:09:A5:0E:24:F8:9F:AD:80:B6:8C:1A:CB:FA:2A:DD:34:93:D9:8B:4E:70:79:0A:60:91:30`. It has not been uploaded.
+
+APK: `LuxTicker-Android-1.4.10.apk` (also copied as `LuxTicker.apk`). AAB: `play/LuxTicker-Android-1.4.10-vc33.aab`.
+
+## 1.4.9
+
+Installs over 1.4.8. Package `com.lux.ticker`. versionCode 32. Settings → Battery has Price refresh. Live keeps today's pace and is the default when that choice was never saved. Every 1, 3, 5, 10, or 30 min slows stocks, Bitcoin, and charts to that wait, applies immediately, and syncs with the other settings. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
+
+Sideload APK SHA-256: `403c011ba3cf4ede6d92690dd6088f3dc09b6aeceb6b0dca71ae30af10b831cb`
+
+Same sideload certificate as 1.4.1 through 1.4.8, SHA-256 `d39d70febde76e274bdcf216a57761d7f27d2de015dba4a2b65646f665139597`.
+
+Play AAB SHA-256: `f1f7a3d180f000b76876b6ce069b59e96cd0cfb20e394f83f3d74aa7626a4552`
+
+The Play bundle is signed with the same upload key, certificate SHA-256 `0D:18:32:AF:9A:76:09:A5:0E:24:F8:9F:AD:80:B6:8C:1A:CB:FA:2A:DD:34:93:D9:8B:4E:70:79:0A:60:91:30`. It has not been uploaded.
+
+APK: `LuxTicker-Android-1.4.9.apk` (also copied as `LuxTicker.apk`). AAB: `play/LuxTicker-Android-1.4.9-vc32.aab`.
+
+## 1.4.8
 
 Installs over 1.4.7. Package `com.lux.ticker`. versionCode 31. The ticker stays directly under the status bar. A restart, rotation, theme change, lock screen, or service restart does not add that bar a second time. A gap under the bar is added only when one was already saved. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
 

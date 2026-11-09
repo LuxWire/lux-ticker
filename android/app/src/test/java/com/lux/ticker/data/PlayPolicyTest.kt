@@ -30,7 +30,7 @@ class PlayPolicyTest {
         assertTrue(ReleaseNotes.ABOUT.contains("does not sell data"))
         assertTrue(ReleaseNotes.WHY_OVERLAY.contains("does not read the screen"))
         assertTrue(ReleaseNotes.WHY_NOTIFICATIONS.contains("ticker tape"))
-        assertFalse(ReleaseNotes.ABOUT.contains("Jonathan"))
+        assertTrue(ReleaseNotes.ABOUT.contains("@LuxWire"))
     }
 
     private fun manifest(): String {

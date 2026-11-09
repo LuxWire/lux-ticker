@@ -1,6 +1,7 @@
 package com.lux.ticker.ui
 
 import android.app.Application
+import android.os.PowerManager
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -76,6 +77,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lux.ticker.LuxApp
 import com.lux.ticker.R
+import com.lux.ticker.data.BatteryGate
 import com.lux.ticker.data.BtcChart
 import com.lux.ticker.data.BtcPoint
 import com.lux.ticker.data.BtcPreset
@@ -87,6 +89,8 @@ import com.lux.ticker.data.ChartStyle
 import com.lux.ticker.data.ChartSymbols
 import com.lux.ticker.data.DefaultSymbols
 import com.lux.ticker.data.PaperPalette
+import com.lux.ticker.data.PriceRefresh
+import com.lux.ticker.data.PriceRefreshPace
 import com.lux.ticker.data.PriceFormat
 import com.lux.ticker.data.SymbolRules
 import com.lux.ticker.data.SymbolSpec
@@ -97,6 +101,8 @@ import java.io.IOException
 import com.lux.ticker.net.BtcChartClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -150,8 +156,14 @@ class BtcChartViewModel(app: Application, val symbol: String) : AndroidViewModel
     private var generation = 0
     private var lifetimeLoaded = false
     private var lifetime = ChartRangeMarks(null, null)
+    private val priceRefresh = AtomicReference(PriceRefresh.LIVE)
 
     init {
+        viewModelScope.launch {
+            LuxApp.container(getApplication()).settings.settings.collect { snapshot ->
+                priceRefresh.set(snapshot.priceRefresh)
+            }
+        }
         viewModelScope.launch {
             while (isActive) {
                 val ticket = generation
@@ -205,14 +217,27 @@ class BtcChartViewModel(app: Application, val symbol: String) : AndroidViewModel
                         }
                     }
                 }
-                val wait = window?.let { BtcChart.refreshMillis(it) } ?: 60_000L
+                val natural = window?.let { BtcChart.refreshMillis(it) } ?: 60_000L
                 val started = System.currentTimeMillis()
-                while (isActive && generation == ticket && System.currentTimeMillis() - started < wait) {
+                while (isActive && generation == ticket) {
+                    val save = chartPowerSave()
+                    val base = PriceRefreshPace.fetchPeriodMs(priceRefresh.get(), natural, save)
+                    val wait = if (!chartScreenOn() || chartDeviceIdle()) PriceRefreshPace.IDLE_RECHECK_MS else base
+                    if (BatteryGate.shouldFetch(System.currentTimeMillis() - started, wait)) break
                     delay(250)
                 }
             }
         }
     }
+
+    private fun chartPower(): PowerManager? =
+        getApplication<Application>().getSystemService(PowerManager::class.java)
+
+    private fun chartPowerSave(): Boolean = runCatching { chartPower()?.isPowerSaveMode == true }.getOrDefault(false)
+
+    private fun chartScreenOn(): Boolean = runCatching { chartPower()?.isInteractive != false }.getOrDefault(true)
+
+    private fun chartDeviceIdle(): Boolean = runCatching { chartPower()?.isDeviceIdleMode == true }.getOrDefault(false)
 
     fun select(preset: BtcPreset) {
         generation++

@@ -5,6 +5,7 @@ import com.lux.ticker.data.AppTheme
 import com.lux.ticker.data.DisplayMode
 import com.lux.ticker.data.Dock
 import com.lux.ticker.data.PinSide
+import com.lux.ticker.data.PriceRefresh
 import com.lux.ticker.data.StripTheme
 import com.lux.ticker.data.SymbolRules
 import com.lux.ticker.data.SymbolSpec
@@ -101,6 +102,7 @@ object CloudSync {
                 DisplayMode.ALWAYS.name -> DisplayMode.ALWAYS
                 else -> local.displayMode
             },
+            priceRefresh = if (!has("priceRefresh")) local.priceRefresh else PriceRefresh.fromStored(settingsObj.str("priceRefresh")),
             luxWireDigest = if (!has("luxWireDigest")) local.luxWireDigest else settingsObj.bool("luxWireDigest", local.luxWireDigest),
             luxWireSubscriber = if (!has("luxWireSubscriber")) local.luxWireSubscriber else settingsObj.bool("luxWireSubscriber", local.luxWireSubscriber),
             priceAlerts = if (!has("priceAlerts")) local.priceAlerts else settingsObj.bool("priceAlerts", local.priceAlerts),
@@ -149,6 +151,7 @@ object CloudSync {
             put("scrollRightToLeft", settings.scrollRightToLeft)
             put("pinSide", settings.pinSide.name)
             put("displayMode", settings.displayMode.name)
+            put("priceRefresh", settings.priceRefresh.name)
             put("luxWireDigest", settings.luxWireDigest)
             put("luxWireSubscriber", settings.luxWireSubscriber)
             put("priceAlerts", settings.priceAlerts)
@@ -209,6 +212,7 @@ object CloudSync {
                 DisplayMode.MANUAL.name -> DisplayMode.MANUAL
                 else -> fallback.displayMode
             },
+            priceRefresh = PriceRefresh.fromStored(settingsObj.str("priceRefresh") ?: fallback.priceRefresh.name),
             luxWireDigest = settingsObj.bool("luxWireDigest", fallback.luxWireDigest),
             luxWireSubscriber = settingsObj.bool("luxWireSubscriber", fallback.luxWireSubscriber),
             priceAlerts = settingsObj.bool("priceAlerts", fallback.priceAlerts),

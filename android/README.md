@@ -15,7 +15,7 @@ On the phone, prices scroll in a short row under the status bar. Display → Ver
 - Symbols: the same list as the Windows bar (about 46). Edit them in the app: add ticker, remove ticker, drag to reorder, reset. Stored in DataStore. Bitcoin stays on the list. The left pin is optional.
 - **Charts** open from the home screen and from any ticker row. The page is paper (`#F6F2E8`) with an orange (`#F7931A`) line. Presets are 1H, 1D, 1W, 1M, 6M, YTD, 1Y, and ALL, plus a custom from and to. 1H is the last 60 minutes at 1-minute bars. 1D uses 5-minute bars. Longer ranges use hourly or daily bars. **Line** and **Candles** are on every chart. Up candles are `#F7931A`. Down candles are ink `#282622`. Dragging ticks once per point or candle and shows the time in ET. A candle also shows open, high, low, and close. **Chart haptics** is on, and the tick does not depend on the phone's touch-feedback setting. The selected range shows its high and low, and the page shows the all-time high and low, each with the New York time. The search field at the top loads a symbol when you press Enter or the search button. Typed text and the cursor are ink `#161412`. Suggestions follow what you type. An unknown symbol stays on the page with an error. Short ranges refresh about every minute while the screen is open. Longer ranges refresh about every five minutes. Bitcoin from September 17, 2014 onward is Yahoo `BTC-USD`. Earlier Bitcoin history is the Blockchain.com market price. Other symbols are Yahoo. No API key.
 - Bitcoin on the tape: Coinbase public websocket `wss://ws-feed.exchange.coinbase.com` (`BTC-USD` ticker). Change is versus `open_24h`.
-- Everything else: Yahoo public chart `https://query1.finance.yahoo.com/v8/finance/chart/SYM?interval=1m&range=1d&includePrePost=true` with a browser User-Agent, about every 13 seconds, four at a time. Polling pauses while the screen is off. Failures back off (15 s up to 5 min). The last price stays and dims when it is stale.
+- Everything else: Yahoo public chart `https://query1.finance.yahoo.com/v8/finance/chart/SYM?interval=1m&range=1d&includePrePost=true` with a browser User-Agent. Live checks about every 13 seconds, four at a time, and only while the screen is on. Settings → Battery → Price refresh can wait 1, 3, 5, 10, or 30 min instead. That wait is not cut short by a redraw. Android battery saver closes the live Bitcoin socket and will not poll faster than every 15 min unless a saved choice is already slower. The screen off pause and Doze do not fetch and do not keep a CPU wake. Live is the default, and an update leaves a phone that never chose on Live. Failures back off (15 s up to 5 min, and never faster than the chosen wait or the battery-saver floor). The last price stays and dims when it is stale.
 - Starts on boot when that setting is on (it is on by default).
 - Home-screen widgets: the wide tape, **LuxWire Ticker 1×2**, and **LuxWire Ticker 2×2**. A Quick Settings tile shows or hides the overlay. **Always overlay**, **Lock screen only**, and **Manual refresh** are in Settings. **Open battery settings** opens the system battery list. The app does not declare `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. Start on boot still restores the strip after a restart.
 - **Price alerts** are off until you turn them on. Bitcoin uses a ± percent band. **Add alert** saves another symbol and dollar target. The saved list sits under that field. A hit writes the date and time on that row and posts a popup in addition to the quiet or loud channel.
@@ -37,40 +37,11 @@ The release APK is `app/build/outputs/apk/release/app-release.apk`.
 
 ### Account backend
 
-Sign-in, cloud sync, and Pro entitlements use a Supabase project you configure yourself. Copy the example and fill in the project URL and the publishable anon key:
-
-```bash
-cp supabase.properties.example supabase.properties
-```
-
-`supabase.properties` is gitignored. Leave it out and the app still builds; account calls have no host until you add it. Do not put a service-role key in that file. This tree does not include SQL migrations.
+Sign-in uses a Supabase project you configure yourself. Copy `supabase.properties.example` to `supabase.properties` and fill in the project URL and the publishable anon key. That file is gitignored. Leave it out and the app still builds. Do not put a service-role key in it.
 
 ### Signing
 
-The delivered APK is signed. The keystore is not in git. To build an update that installs over this one, create `keystore/keystore.properties` (see `keystore.properties.example`) pointing at a keystore you keep yourself:
-
-```bash
-mkdir -p keystore
-keytool -genkeypair -v \
-  -keystore keystore/lux-ticker-release.jks \
-  -alias luxticker \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -storepass YOUR_PASSWORD \
-  -dname "CN=Lux Ticker, OU=Personal, O=Lux, C=US"
-```
-
-`keystore.properties`:
-
-```
-storeFile=keystore/lux-ticker-release.jks
-storePassword=YOUR_PASSWORD
-keyAlias=luxticker
-keyPassword=YOUR_PASSWORD
-```
-
-PKCS12 uses one password for the store and the key. If `keystore/keystore.properties` is missing, the release build is signed with the debug keystore instead, and Android will not upgrade an install that was signed with a different key. Uninstall first in that case. Do not commit the `.jks` or the password file.
-
-The Play upload key is a different keystore, kept outside this repo. Sideload builds stay on the key above so they still install over the existing APK. `LUX_UPLOAD_PROPS=/path/to/upload-keystore.properties ./gradlew :app:bundleUpload` signs an Android App Bundle with that upload key. The upload variant forces `X_BEARER` and `X_CLIENT_ID` to empty strings.
+Signing material is not in this export. A release build uses the debug signing config.
 
 JetBrains Mono is bundled under the SIL Open Font License. See `third_party/jetbrains-mono/OFL.txt`.
 
@@ -78,7 +49,7 @@ JetBrains Mono is bundled under the SIL Open Font License. See `third_party/jetb
 
 1. Copy `LuxTicker.apk` onto the phone (USB, Drive, or Nearby Share). You do not need a Play account. USB debugging is optional.
 2. Allow the app that will open the APK to install unknown apps. On current Pixels: **Settings → Apps → Special app access → Install unknown apps**, then pick Files or Chrome and allow it. Opening the APK also links straight to that switch if it is still off.
-3. Tap the APK and install. No device-admin or device-owner access is required. Version 1.4.11 installs over earlier 1.4.x builds when it is signed with the same key. An update keeps settings that were already saved. The ticker stays directly under the status bar. Settings → Account can continue with Google or X. That sign-in opens in a browser tab and returns through luxwire://auth-callback. Privacy (https://luxwire.github.io/privacy.html) and Terms (https://luxwire.github.io/terms.html) are linked on that screen and on Contact / About. The shade and lock notification use an ink band (light and night). In-app strip themes are unchanged. Display → Vertical position accepts a typed dp value next to the slider. A fresh install draws the strip at that default. Settings → Account is optional. A new install uses 50 dp/s and sits directly under the status bar until you set a gap. The strip stays transparent. Pre and AH are on. Chart haptics are on. Symbol color and price color are separate. Each setting has a reset, and Reset everything asks first. Charts include 1H and a Line / Candles toggle. Search on a chart loads the symbol you type. One notification carries the tape in the shade and on the lock screen. Paper matches the LuxWire article card (`#F6F2E8`, accent `#F7931A`). Typed text on paper is ink `#161412`. @LuxWire alerts still come from the X feed. This build is a sideload until a Play install exists. Billing is not in the app.
+3. Tap the APK and install. No device-admin or device-owner access is required. Version 1.4.8 installs over 1.4.7 when it is signed with the same key. An update keeps settings that were already saved. The ticker stays directly under the status bar. Settings → Account can continue with Google or X. That sign-in opens in a browser tab and returns through luxwire://auth-callback. Privacy (https://luxwire.github.io/privacy.html) and Terms (https://luxwire.github.io/terms.html) are linked on that screen and on Contact / About. At night the shade tape uses a navy band, brighter gold, a light Pre and AH label, and lighter green and red. Daytime paper colors stay the same. Display → Vertical position accepts a typed dp value next to the slider. A fresh install draws the strip at that default. Settings → Account is optional. A new install uses 50 dp/s and sits directly under the status bar until you set a gap. The strip stays transparent. Pre and AH are on. Chart haptics are on. Symbol color and price color are separate. Each setting has a reset, and Reset everything asks first. Charts include 1H and a Line / Candles toggle. Search on a chart loads the symbol you type. One notification carries the tape in the shade and on the lock screen. Paper matches the LuxWire article card (`#F6F2E8`, accent `#F7931A`). Typed text on paper is ink `#161412`. @LuxWire alerts still come from the X feed. This build is a sideload until a Play install exists. Billing is not in the app.
 4. Open **LuxWire Ticker**.
 5. Tap **Allow display over other apps**. On the system screen, turn **LuxWire Ticker** on, then return. The strip sits flush under the status bar.
 6. Allow notifications when asked. The ongoing notification is the tape. It is silent. **Hide tape** and **Show tape** live there. There is not a second "Status bar" row. **@LuxWire posts** uses its own channel.

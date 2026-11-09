@@ -6,7 +6,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.KeyguardManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -17,6 +20,7 @@ import android.provider.Settings
 import android.util.Log
 import com.lux.ticker.LuxApp
 import com.lux.ticker.R
+import com.lux.ticker.data.BatteryGate
 import com.lux.ticker.data.LockTickerText
 import com.lux.ticker.data.NotificationCrawl
 import com.lux.ticker.data.StripFormatter
@@ -69,14 +73,31 @@ class TickerService : Service() {
         val keyguard = getSystemService(KeyguardManager::class.java)
         screenInteractive = { power.isInteractive }
         keyguardLocked = { keyguard.isKeyguardLocked }
+        val powerSave = { power.isPowerSaveMode }
+        val deviceIdle = { power.isDeviceIdleMode }
         engine = QuoteEngine(
             yahoo = container.yahoo,
             webSocketHttp = container.webSocketHttp,
             quotes = container.quotes,
             symbols = container.symbols,
             screenOn = { power.isInteractive },
+            powerSave = powerSave,
+            deviceIdle = deviceIdle,
             feed = container.feed,
-        ).also { it.start(scope) }
+        )
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(powerReceiver, powerFilter(), RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(powerReceiver, powerFilter())
+        }
+        scope.launch(Dispatchers.IO) {
+            val first = runCatching { container.settings.read() }.getOrNull()
+            if (first != null) {
+                engine?.setPriceRefresh(first.priceRefresh)
+                engine?.setDisplayMode(first.displayMode)
+            }
+            engine?.start(scope)
+        }
         overlay = OverlayWindows(this, getSystemService(WINDOW_SERVICE) as android.view.WindowManager)
         latestGranted = Settings.canDrawOverlays(this)
         startAsForeground(TickerSettings(), latestGranted)
@@ -86,13 +107,22 @@ class TickerService : Service() {
         }
         scope.launch {
             while (isActive) {
-                delay(30_000)
+                val quiet = !screenInteractive() || power.isPowerSaveMode || power.isDeviceIdleMode
+                delay(if (quiet) BatteryGate.plan(
+                    latestSettings.priceRefresh,
+                    screenOn = false,
+                    powerSave = true,
+                    deviceIdle = false,
+                    manual = false,
+                    userRefresh = false,
+                ).waitMs else 30_000L)
+                if (quiet) continue
                 kicks.value = kicks.value + 1
             }
         }
         scope.launch {
             while (isActive) {
-                delay(NotificationCrawl.delayMs(latestSettings.speedDpPerSec))
+                delay(NotificationCrawl.paceMs(latestSettings.speedDpPerSec, screenInteractive()))
                 if (!NotificationCrawl.shouldAdvance(screenInteractive())) continue
                 val step = if (latestSettings.scrollRightToLeft) 1 else -1
                 tapeShift += step
@@ -102,11 +132,18 @@ class TickerService : Service() {
         scope.launch {
             val feed = LuxWireFeed(this@TickerService)
             while (isActive) {
-                withContext(Dispatchers.IO) {
-                    try {
-                        feed.poll()
-                    } catch (e: Exception) {
-                        Log.w("LuxTicker", "lux wire feed", e)
+                val paused = BatteryGate.pauseSideFeeds(
+                    screenOn = screenInteractive(),
+                    powerSave = power.isPowerSaveMode,
+                    deviceIdle = power.isDeviceIdleMode,
+                )
+                if (!paused) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            feed.poll()
+                        } catch (e: Exception) {
+                            Log.w("LuxTicker", "lux wire feed", e)
+                        }
                     }
                 }
                 val minutes = try {
@@ -114,7 +151,12 @@ class TickerService : Service() {
                 } catch (e: Exception) {
                     3
                 }
-                delay(minutes.coerceIn(2, 5) * 60_000L)
+                val wait = if (paused) {
+                    com.lux.ticker.data.PriceRefreshPace.IDLE_RECHECK_MS
+                } else {
+                    minutes.coerceIn(2, 5) * 60_000L
+                }
+                delay(wait)
             }
         }
     }
@@ -142,6 +184,7 @@ class TickerService : Service() {
     }
 
     override fun onDestroy() {
+        runCatching { unregisterReceiver(powerReceiver) }
         renderJob?.cancel()
         engine?.stop()
         overlay?.remove()
@@ -173,6 +216,7 @@ class TickerService : Service() {
             latestSettings = settings
             latestTape = tape
             engine?.setDisplayMode(settings.displayMode)
+            engine?.setPriceRefresh(settings.priceRefresh)
             noteNetwork()
             val granted = Settings.canDrawOverlays(this)
             latestGranted = granted
@@ -293,6 +337,19 @@ class TickerService : Service() {
         runCatching { manager.deleteNotificationChannel(OLD_CHANNEL) }
         LuxWireNotifier.ensureChannel(this)
         PriceAlertNotifier.ensureChannels(this)
+    }
+
+    private val powerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            engine?.noteConditionsChanged()
+        }
+    }
+
+    private fun powerFilter(): IntentFilter = IntentFilter().apply {
+        addAction(Intent.ACTION_SCREEN_ON)
+        addAction(Intent.ACTION_SCREEN_OFF)
+        addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
+        addAction(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED)
     }
 
     companion object {

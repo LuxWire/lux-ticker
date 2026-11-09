@@ -1,10 +1,18 @@
 package com.lux.ticker.engine
 
 import android.util.Log
+import com.lux.ticker.data.BatteryGate
+import com.lux.ticker.data.BatterySession
 import com.lux.ticker.data.CoinbaseTickerParser
 import com.lux.ticker.data.DisplayMode
 import com.lux.ticker.data.FeedClock
+import com.lux.ticker.data.FetchKind
+import com.lux.ticker.data.FetchPlan
+import com.lux.ticker.data.ParsedQuote
+import com.lux.ticker.data.PriceRefresh
+import com.lux.ticker.data.PriceRefreshPace
 import com.lux.ticker.data.QuoteRepository
+import com.lux.ticker.data.WakeLedger
 import com.lux.ticker.data.SymbolList
 import com.lux.ticker.data.SymbolStore
 import com.lux.ticker.data.YahooHttpException
@@ -16,7 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -36,16 +43,30 @@ class QuoteEngine(
     private val quotes: QuoteRepository,
     private val symbols: SymbolStore,
     private val screenOn: () -> Boolean,
+    private val powerSave: () -> Boolean = { false },
+    private val deviceIdle: () -> Boolean = { false },
     private val feed: FeedClock = FeedClock(),
+    val wakeLedger: WakeLedger = WakeLedger(),
 ) {
     private var job: Job? = null
     private val displayMode = AtomicReference(DisplayMode.ALWAYS)
+    private val priceRefresh = AtomicReference(PriceRefresh.LIVE)
     private val generation = AtomicInteger(0)
     private val wake = Channel<Unit>(Channel.CONFLATED)
 
     fun setDisplayMode(mode: DisplayMode) {
-        displayMode.set(mode)
+        val previous = displayMode.getAndSet(mode)
+        if (previous != mode) wake.trySend(Unit)
+    }
+
+    /** Screen, battery saver, or Doze changed. The wait looks again. A redraw does not call this. */
+    fun noteConditionsChanged() {
         wake.trySend(Unit)
+    }
+
+    fun setPriceRefresh(refresh: PriceRefresh) {
+        val previous = priceRefresh.getAndSet(refresh)
+        if (previous != refresh) wake.trySend(Unit)
     }
 
     fun requestRefresh() {
@@ -64,34 +85,46 @@ class QuoteEngine(
     fun stop() {
         job?.cancel()
         job = null
+        releaseIdle()
     }
 
     private suspend fun stockLoop() {
         var backoffMs = 0L
         var seen = 0
         while (true) {
-            val next = awaitTurn(seen)
-            val refreshed = next != seen
-            seen = next
-            val mode = displayMode.get()
-            if (mode == DisplayMode.MANUAL && !refreshed) continue
-            if (mode != DisplayMode.MANUAL && !screenOn() && !refreshed) continue
+            val refreshed = generation.get() != seen
+            seen = generation.get()
+            val plan = currentPlan(refreshed)
+            if (!plan.fetches) {
+                releaseIdle()
+                waitOut(plan.waitMs)
+                continue
+            }
             val started = System.currentTimeMillis()
             val names = symbols.read().map { it.symbol }.filter { it != SymbolList.PINNED }.distinct()
-            val result = fetchAll(names)
+            var result = Batch(0, 0, 0)
+            BatterySession.aroundFetch(wakeLedger) {
+                result = fetchAll(names)
+            }
             val shouldBackoff = result.rateLimited > 0 ||
                 (names.size >= 4 && result.failed * 2 > names.size)
             feed.noteStockBatch(result.ok, result.failed)
             if (result.failed > 0) {
                 Log.i(TAG, "yahoo ok=${result.ok} fail=${result.failed} limited=${result.rateLimited}")
             }
+            if (plan.kind == FetchKind.ONCE) {
+                val steady = currentPlan(userRefresh = false)
+                if (steady.fetches) waitOut(steady.stockPeriodMs)
+                continue
+            }
+            val refresh = priceRefresh.get()
             if (shouldBackoff) {
-                backoffMs = if (backoffMs == 0L) 15_000L else (backoffMs * 2).coerceAtMost(300_000L)
-                delay(backoffMs)
+                backoffMs = PriceRefreshPace.stockBackoffMs(refresh, backoffMs, powerSave())
+                waitOut(backoffMs)
             } else {
                 backoffMs = 0L
                 val elapsed = System.currentTimeMillis() - started
-                delay((POLL_MS - elapsed).coerceAtLeast(250L))
+                waitOut((plan.stockPeriodMs - elapsed).coerceAtLeast(250L))
             }
         }
     }
@@ -122,83 +155,163 @@ class QuoteEngine(
         Batch(ok.get(), failed.get(), limited.get())
     }
 
-    private suspend fun awaitTurn(seen: Int): Int {
-        if (displayMode.get() == DisplayMode.MANUAL) {
-            while (generation.get() == seen) {
-                withTimeoutOrNull(60_000L) { wake.receive() }
-            }
-            return generation.get()
-        }
-        if (generation.get() != seen) return generation.get()
-        if (!screenOn()) {
-            withTimeoutOrNull(SCREEN_OFF_PAUSE_MS) { wake.receive() }
-        }
-        return generation.get()
+    private fun currentPlan(userRefresh: Boolean): FetchPlan = BatteryGate.plan(
+        refresh = priceRefresh.get(),
+        screenOn = screenOn(),
+        powerSave = powerSave(),
+        deviceIdle = deviceIdle(),
+        manual = displayMode.get() == DisplayMode.MANUAL,
+        userRefresh = userRefresh,
+    )
+
+    private fun releaseIdle() {
+        BatterySession.idle(wakeLedger)
+        runCatching { webSocketHttp.connectionPool.evictAll() }
     }
 
     private suspend fun bitcoinLoop() {
         var backoffMs = 1_000L
         var seen = 0
-        val request = Request.Builder().url(COINBASE_WS).build()
         while (true) {
-            val mode = displayMode.get()
-            if (mode == DisplayMode.MANUAL) {
-                val next = awaitTurn(seen)
-                seen = next
-            } else if (!screenOn()) {
-                awaitTurn(seen)
+            val refreshed = generation.get() != seen
+            if (refreshed) seen = generation.get()
+            val plan = currentPlan(refreshed)
+            if (!plan.fetches) {
+                releaseIdle()
+                waitOut(plan.waitMs)
                 continue
             }
-            val events = Channel<String>(Channel.BUFFERED)
-            val socket = webSocketHttp.newWebSocket(request, object : WebSocketListener() {
-                override fun onOpen(webSocket: WebSocket, response: Response) {
-                    webSocket.send(SUBSCRIBE)
+            if (plan.holdSocket) {
+                backoffMs = runLiveSocket(backoffMs)
+            } else {
+                var quote: ParsedQuote? = null
+                BatterySession.aroundFetch(wakeLedger) {
+                    quote = oneBitcoinQuote()
                 }
+                quote?.let { quotes.upsert(it) }
+                val steady = if (plan.kind == FetchKind.ONCE) currentPlan(userRefresh = false) else plan
+                if (steady.fetches && !steady.holdSocket) waitOut(steady.waitMs)
+            }
+        }
+    }
 
-                override fun onMessage(webSocket: WebSocket, text: String) {
-                    events.trySend(text)
+    /** Live Coinbase socket. Returns the reconnect backoff for the next attempt. */
+    private suspend fun runLiveSocket(backoffMs: Long): Long {
+        var next = backoffMs
+        val session = openBitcoinSocket()
+        var received = false
+        val giveUpAt = System.currentTimeMillis() + 12_000L
+        try {
+            while (currentPlan(userRefresh = false).holdSocket) {
+                val text = withTimeoutOrNull(1_000L) { session.events.receive() }
+                if (text == null) {
+                    if (!received && System.currentTimeMillis() > giveUpAt) break
+                    continue
                 }
+                val quote = CoinbaseTickerParser.parse(text, System.currentTimeMillis()) ?: continue
+                received = true
+                next = 1_000L
+                quotes.upsert(quote)
+            }
+        } catch (e: ClosedReceiveChannelException) {
+            // The socket closed. The loop reconnects unless the screen is off.
+        } catch (e: CancellationException) {
+            session.socket.cancel()
+            throw e
+        } catch (e: Exception) {
+            Log.i(TAG, "coinbase reconnect: ${e.javaClass.simpleName}")
+        } finally {
+            session.close()
+        }
+        if (!currentPlan(userRefresh = false).holdSocket) {
+            releaseIdle()
+            return 1_000L
+        }
+        waitOut(next)
+        return (next * 2).coerceAtMost(30_000L)
+    }
 
-                override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                    webSocket.close(code, reason)
-                }
+    /** One ticker message, then the socket closes. Used when Price refresh is not Live. */
+    private suspend fun oneBitcoinQuote(): ParsedQuote? {
+        val session = openBitcoinSocket()
+        val giveUpAt = System.currentTimeMillis() + 12_000L
+        try {
+            while (System.currentTimeMillis() < giveUpAt) {
+                val text = withTimeoutOrNull(1_000L) { session.events.receive() } ?: continue
+                return CoinbaseTickerParser.parse(text, System.currentTimeMillis()) ?: continue
+            }
+            return null
+        } catch (e: ClosedReceiveChannelException) {
+            return null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.i(TAG, "coinbase reconnect: ${e.javaClass.simpleName}")
+            return null
+        } finally {
+            session.close()
+        }
+    }
 
-                override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                    events.close()
-                }
+    private fun openBitcoinSocket(): BitcoinSocket {
+        val events = Channel<String>(Channel.BUFFERED)
+        val request = Request.Builder().url(COINBASE_WS).build()
+        val socket = webSocketHttp.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                webSocket.send(SUBSCRIBE)
+            }
 
-                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                    events.close(t)
-                }
-            })
-            var received = false
-            val giveUpAt = System.currentTimeMillis() + 12_000L
-            try {
-                while (if (mode == DisplayMode.MANUAL) !received else screenOn() && displayMode.get() != DisplayMode.MANUAL) {
-                    val text = withTimeoutOrNull(1_000L) { events.receive() }
-                    if (text == null) {
-                        if (!received && System.currentTimeMillis() > giveUpAt) break
-                        continue
-                    }
-                    val quote = CoinbaseTickerParser.parse(text, System.currentTimeMillis()) ?: continue
-                    received = true
-                    backoffMs = 1_000L
-                    quotes.upsert(quote)
-                }
-            } catch (e: ClosedReceiveChannelException) {
-                // The socket closed. The loop reconnects unless the screen is off.
-            } catch (e: CancellationException) {
-                socket.cancel()
-                throw e
-            } catch (e: Exception) {
-                Log.i(TAG, "coinbase reconnect: ${e.javaClass.simpleName}")
-            } finally {
-                socket.cancel()
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                events.trySend(text)
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(code, reason)
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 events.close()
             }
-            if (mode == DisplayMode.MANUAL || !screenOn()) continue
-            delay(backoffMs)
-            backoffMs = (backoffMs * 2).coerceAtMost(30_000L)
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                events.close(t)
+            }
+        })
+        return BitcoinSocket(socket, events)
+    }
+
+    /**
+     * Wait [ms]. A tape redraw that sends a wake without changing the screen, saver,
+     * Doze, mode, or Price refresh does not end the wait. That used to collapse a
+     * 30 minute choice back into a fetch on every quote.
+     */
+    private suspend fun waitOut(ms: Long) {
+        if (ms <= 0L) return
+        var left = ms
+        while (left > 0L) {
+            val before = stamp()
+            val started = System.currentTimeMillis()
+            val signaled = withTimeoutOrNull(left) { wake.receive() }
+            val spent = System.currentTimeMillis() - started
+            if (signaled == null) return
+            if (stamp() != before) return
+            left -= spent
+        }
+    }
+
+    private fun stamp(): String = listOf(
+        priceRefresh.get().name,
+        displayMode.get().name,
+        screenOn(),
+        powerSave(),
+        deviceIdle(),
+        generation.get(),
+    ).joinToString("|")
+
+    private class BitcoinSocket(val socket: WebSocket, val events: Channel<String>) {
+        fun close() {
+            socket.cancel()
+            events.close()
         }
     }
 
@@ -206,8 +319,6 @@ class QuoteEngine(
 
     private companion object {
         const val TAG = "LuxTicker"
-        const val POLL_MS = 13_000L
-        const val SCREEN_OFF_PAUSE_MS = 2_000L
         const val COINBASE_WS = "wss://ws-feed.exchange.coinbase.com"
         const val SUBSCRIBE =
             """{"type":"subscribe","product_ids":["BTC-USD"],"channels":["ticker"]}"""

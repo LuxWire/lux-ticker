@@ -195,7 +195,6 @@ class TickerStripViewTest {
     private fun writePng(bitmap: Bitmap) {
         val dirs = mutableListOf<File>()
         System.getProperty("lux.screenshot.dir")?.let { dirs += File(it) }
-        dirs += File("/opt/cursor/artifacts")
         dirs.forEach { dir ->
             runCatching {
                 if (dir.mkdirs() || dir.isDirectory) {

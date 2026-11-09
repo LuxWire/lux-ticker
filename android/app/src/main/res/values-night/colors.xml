@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same ink notification band as light mode. -->
+    <color name="lux_ticker_shade_bg">#FF14130F</color>
+    <color name="lux_ticker_shade_edge">#FFEA580C</color>
+    <color name="lux_ticker_shade_accent">#FFFFC83D</color>
+    <color name="lux_ticker_shade_ink">#FFF4EFE4</color>
+    <color name="lux_ticker_shade_gain">#FF4ADE80</color>
+    <color name="lux_ticker_shade_loss">#FFFF6B6B</color>
+</resources>

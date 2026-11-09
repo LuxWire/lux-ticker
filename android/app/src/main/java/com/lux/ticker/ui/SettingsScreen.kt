@@ -62,6 +62,7 @@ import com.lux.ticker.data.AlertKind
 import com.lux.ticker.data.AppTheme
 import com.lux.ticker.data.DisplayMode
 import com.lux.ticker.data.PinSide
+import com.lux.ticker.data.PriceRefresh
 import com.lux.ticker.data.PriceAlerts
 import com.lux.ticker.data.PriceFormat
 import com.lux.ticker.data.SavedAlert
@@ -107,6 +108,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setStripTheme(theme: StripTheme) = launch { store.setStripTheme(theme) }
     fun setAppTheme(theme: AppTheme) = launch { store.setAppTheme(theme) }
     fun setDisplayMode(mode: DisplayMode) = launch { store.setDisplayMode(mode) }
+    fun setPriceRefresh(refresh: PriceRefresh) = launch { store.setPriceRefresh(refresh) }
     fun setPriceAlerts(enabled: Boolean) = launch { store.setPriceAlerts(enabled) }
     fun setPriceAlertsLoud(enabled: Boolean) = launch { store.setPriceAlertsLoud(enabled) }
     fun setBtcAlertPct(pct: Float) = launch { store.setBtcAlertPct(pct) }
@@ -149,7 +151,7 @@ fun SettingsMenuRoute(onBack: () -> Unit, onOpen: (String) -> Unit) {
             title = { Text("Reset everything?") },
             text = {
                 Text(
-                    "Every setting goes back to the factory defaults. Speed is 50 dp/s. Vertical position sits directly under the status bar. Pre and AH stay on. Chart haptics stay on. Saved price alerts are cleared. Your tickers and X sign-in stay.",
+                    "Every setting goes back to the 1.4.11 defaults. Speed is 50 dp/s. Vertical position sits directly under the status bar. Price refresh is Live. Pre and AH stay on. Chart haptics stay on. Saved price alerts are cleared. Your tickers and X sign-in stay.",
                 )
             },
             confirmButton = {
@@ -675,6 +677,19 @@ fun SettingsBatteryRoute(onBack: () -> Unit) {
     val power = context.getSystemService(PowerManager::class.java)
     val batteryFree = power.isIgnoringBatteryOptimizations(context.packageName)
     SettingsPage(title = "Battery", onBack = onBack) {
+        Text(
+            "Price refresh is how often new prices are fetched. Live keeps the current pace while the screen is on. A minute choice waits that full time, and a redraw does not fetch early. Android battery saver closes the live Bitcoin stream. The screen off pause does not wake the phone every few seconds.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        PriceRefresh.entries.forEach { choice ->
+            ModeButton(choice.label, settings.priceRefresh == choice) {
+                viewModel.setPriceRefresh(choice)
+            }
+        }
+        ResetRow("Price refresh") { viewModel.setPriceRefresh(PriceRefresh.LIVE) }
+        Spacer(Modifier.height(16.dp))
         Text(
             "Always overlay keeps the status-bar strip while the screen is on. Lock screen only hides that strip until the phone is locked. Manual refresh stops the steady poll and keeps the last prices until you tap Refresh.",
             style = MaterialTheme.typography.bodySmall,

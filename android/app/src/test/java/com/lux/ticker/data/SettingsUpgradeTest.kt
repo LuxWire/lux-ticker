@@ -41,6 +41,30 @@ class SettingsUpgradeTest {
         )
     }
 
+    @Test fun aSavedFileWithoutPriceRefreshStaysLive() = runBlocking {
+        val (store, _) = seeded()
+        assertFalse(store.hasStoredPriceRefresh())
+        assertEquals(PriceRefresh.LIVE, store.read().priceRefresh)
+        val saved = store.read()
+        store.ensureFactoryDefaults()
+        assertEquals(saved, store.read())
+        assertFalse(store.hasStoredPriceRefresh())
+        store.setPriceRefresh(PriceRefresh.M10)
+        assertEquals(PriceRefresh.M10, store.read().priceRefresh)
+        assertTrue(store.hasStoredPriceRefresh())
+        val kept = store.read()
+        store.ensureFactoryDefaults()
+        assertEquals(kept, store.read())
+        val merged = CloudSync.merge(kept, """{"v":1,"settings":{"speedDpPerSec":40}}""")!!
+        assertEquals(PriceRefresh.M10, merged.settings.priceRefresh)
+        val chosen = CloudSync.merge(kept, """{"v":1,"settings":{"priceRefresh":"M30"}}""")!!
+        assertEquals(PriceRefresh.M30, chosen.settings.priceRefresh)
+        assertEquals(kept.speedDpPerSec, chosen.settings.speedDpPerSec, 0.001f)
+        assertTrue(CloudSync.encode(chosen.settings, emptyList()).contains("\"priceRefresh\":\"M30\""))
+        val oldDoc = CloudSync.decode("""{"v":1,"settings":{"speedDpPerSec":40}}""")!!
+        assertEquals(PriceRefresh.LIVE, oldDoc.settings.priceRefresh)
+    }
+
     @Test fun aUsedFileDoesNotGrowAMissingOffset() = runBlocking {
         val file = File.createTempFile("lux-upgrade-offset", ".preferences_pb")
         file.delete()

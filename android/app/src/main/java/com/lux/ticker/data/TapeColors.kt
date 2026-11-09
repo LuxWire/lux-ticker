@@ -64,23 +64,23 @@ object TapeColors {
     fun forLockTicker(color: Int, theme: StripTheme = StripTheme.PAPER): Int = forStrip(color, theme)
 
     /**
-     * Shade and lock notification band. Always the ink band (Maven option A),
-     * in light and night. In-app strip themes are unchanged.
+     * Shade and lock notification. The band is ink in light and night.
+     * The in-app strip still uses [forStrip].
      */
     fun notificationBand(theme: StripTheme, night: Boolean): Int = ShadePalette.BG
 
-    fun forNotification(
-        color: Int,
-        theme: StripTheme,
-        night: Boolean,
-        priceLike: Boolean = false,
-    ): Int = ShadePalette.place(color, priceLike)
+    /**
+     * Notification text. Known tape colors use the ink palette.
+     * A saved color that is at least 4.5:1 on the ink band is kept.
+     * A saved color that is darker than that falls back to the symbol or price default.
+     */
+    fun forNotification(color: Int, theme: StripTheme, night: Boolean, priceLike: Boolean = false): Int =
+        ShadePalette.place(color, priceLike)
 }
 
 /**
- * Shade and lock notification palette (ink band).
- * Every named swatch is at least 4.5:1 against [BG].
- * A saved custom color under 4.5:1 falls back in [place].
+ * Shade and lock notification, in light and night.
+ * Every text swatch is at least 4.5:1 against [BG].
  */
 object ShadePalette {
     const val BG = 0xFF14130F.toInt()
@@ -90,13 +90,17 @@ object ShadePalette {
     const val GAIN = 0xFF4ADE80.toInt()
     const val LOSS = 0xFFFF6B6B.toInt()
     const val MUTED = 0xFFB7AFA3.toInt()
-    const val DOT = 0xFFB7AFA3.toInt()
+    const val DOT = MUTED
 
     fun map(color: Int): Int = place(color, priceLike = false)
 
+    /**
+     * [priceLike] picks the fallback when a saved color is unreadable on ink.
+     * Symbols fall back to [SYMBOL]. Prices, tags, and percents fall back to [INK].
+     */
     fun place(color: Int, priceLike: Boolean): Int {
-        val mapped = when (color) {
-            TapeColors.SYMBOL -> SYMBOL
+        val known = when (color) {
+            TapeColors.SYMBOL, TapeColors.SYMBOL_PIN -> SYMBOL
             TapeColors.PRICE, TapeColors.TAG -> INK
             TapeColors.UP -> GAIN
             TapeColors.DOWN -> LOSS
@@ -104,14 +108,9 @@ object ShadePalette {
             TapeColors.BG -> BG
             else -> null
         }
-        if (mapped != null) return mapped
-        return if (Wcag.ratio(color, BG) >= Wcag.BODY_TEXT) {
-            color
-        } else if (priceLike) {
-            INK
-        } else {
-            SYMBOL
-        }
+        if (known != null) return known
+        if (Wcag.ratio(color, BG) >= Wcag.BODY_TEXT) return color
+        return if (priceLike) INK else SYMBOL
     }
 }
 

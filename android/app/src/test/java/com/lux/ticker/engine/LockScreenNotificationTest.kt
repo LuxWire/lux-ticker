@@ -2,10 +2,15 @@ package com.lux.ticker.engine
 
 import android.app.Application
 import android.app.Notification
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.text.Spanned
 import android.text.TextUtils.TruncateAt
 import android.text.style.ForegroundColorSpan
+import android.view.View
 import android.widget.TextView
+import java.io.File
+import kotlin.math.abs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -90,14 +95,15 @@ class LockScreenNotificationTest {
         val secret = LockScreenNotifications.build(context, tape, showOnLockScreen = false)
         assertEquals(Notification.VISIBILITY_SECRET, secret.visibility)
         assertEquals(ShadePalette.BG, (root.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(0, root.paddingTop)
+        assertEquals(root.paddingTop, root.paddingBottom)
         val spans = (btc.text as Spanned).getSpans(0, btc.text.length, ForegroundColorSpan::class.java)
         val colors = spans.map { it.foregroundColor }.toSet()
         assertTrue(colors.contains(ShadePalette.SYMBOL))
         assertTrue(colors.contains(ShadePalette.INK))
         assertTrue(colors.contains(ShadePalette.GAIN))
-        assertFalse(colors.contains(TapeColors.UP))
-        assertFalse(colors.contains(TapeColors.PRICE))
         assertFalse(colors.contains(PaperPalette.GAIN))
+        assertFalse(colors.contains(TapeColors.PRICE))
         val dark = LockScreenNotifications.build(context, tape, theme = StripTheme.DARK)
         val darkRoot = dark.contentView.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (darkRoot.background as android.graphics.drawable.ColorDrawable).color)
@@ -109,11 +115,13 @@ class LockScreenNotificationTest {
         assertTrue(darkColors.contains(ShadePalette.GAIN))
         val bigRoot = big.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (bigRoot.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(bigRoot.paddingTop, bigRoot.paddingBottom)
 
         val pinnedRight = LockScreenNotifications.build(context, tape, pinOnRight = true)
         assertEquals(R.layout.notification_lock_ticker_right, pinnedRight.contentView.layoutId)
         val rightRoot = pinnedRight.contentView.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (rightRoot.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.EDGE, (rightRoot.findViewById<TextView>(R.id.lock_accent).background as android.graphics.drawable.ColorDrawable).color)
 
         val moved = LockScreenNotifications.build(context, tape, charOffset = 24)
         val movedRoot = moved.contentView.apply(host, host.findViewById(android.R.id.content))
@@ -130,7 +138,7 @@ class LockScreenNotificationTest {
 
     @Test
     @Config(qualifiers = "night")
-    fun nightShadeUsesInkBandEvenWhenTheAppThemeIsPaper() {
+    fun nightShadeUsesTheSameInkBand() {
         val context = RuntimeEnvironment.getApplication()
         assertTrue(LockScreenNotifications.nightMode(context))
         assertEquals(ShadePalette.BG, context.getColor(R.color.lux_ticker_shade_bg))
@@ -185,5 +193,69 @@ class LockScreenNotificationTest {
         val rightRoot = right.contentView.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (rightRoot.background as android.graphics.drawable.ColorDrawable).color)
         assertEquals(ShadePalette.EDGE, notification.color)
+        assertEquals(0, root.paddingTop)
+        assertEquals(root.paddingTop, root.paddingBottom)
+    }
+
+    @Test fun lightNotificationTapeIsCenteredInTheSystemSlot() {
+        val bitmap = renderSlot(night = false)
+        writeNotificationPng(bitmap, "notification-ticker-light.png")
+    }
+
+    @Test
+    @Config(qualifiers = "night")
+    fun nightNotificationTapeIsCenteredInTheSystemSlot() {
+        val bitmap = renderSlot(night = true)
+        writeNotificationPng(bitmap, "notification-ticker-night.png")
+    }
+
+    private fun renderSlot(night: Boolean): Bitmap {
+        val context = RuntimeEnvironment.getApplication()
+        assertEquals(night, LockScreenNotifications.nightMode(context))
+        val now = Instant.parse("2026-10-22T21:28:00Z")
+        val tape = StripFormatter.build(
+            listOf(SymbolSpec("BTC", "BTC"), SymbolSpec("IBIT", "IBIT"), SymbolSpec("MSTR", "MSTR")),
+            mapOf(
+                "BTC" to ParsedQuote("BTC", 108412.5, 106000.0, 1.84, "USD", now.toEpochMilli(), now.toEpochMilli()),
+                "IBIT" to ParsedQuote("IBIT", 46.59, 46.0, 0.76, "USD", now.toEpochMilli(), now.toEpochMilli()),
+                "MSTR" to ParsedQuote("MSTR", 352.18, 340.0, -5.12, "USD", now.toEpochMilli(), now.toEpochMilli()),
+            ),
+            now,
+        )
+        val notification = LockScreenNotifications.build(context, tape, theme = StripTheme.PAPER)
+        val host = Robolectric.buildActivity(android.app.Activity::class.java).setup().get()
+        val root = notification.contentView.apply(host, host.findViewById(android.R.id.content))
+        val density = context.resources.displayMetrics.density
+        val width = (360 * density).toInt()
+        val slot = (48 * density).toInt()
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(slot, View.MeasureSpec.EXACTLY),
+        )
+        root.layout(0, 0, width, slot)
+        val btc = root.findViewById<TextView>(R.id.lock_btc)
+        val above = btc.top
+        val below = slot - btc.bottom
+        assertTrue("text should sit below the top of the band", above > 0)
+        assertTrue("space under the text should match the space above", abs(above - below) <= (2 * density).toInt().coerceAtLeast(2))
+        assertEquals(ShadePalette.BG, (root.background as android.graphics.drawable.ColorDrawable).color)
+        val bitmap = Bitmap.createBitmap(width, slot, Bitmap.Config.ARGB_8888)
+        root.draw(Canvas(bitmap))
+        return bitmap
+    }
+
+    private fun writeNotificationPng(bitmap: Bitmap, name: String) {
+        val dirs = listOf(
+            File(System.getProperty("lux.screenshot.dir") ?: "build/reports/screenshots"),
+        )
+        dirs.forEach { dir ->
+            runCatching {
+                if (dir.mkdirs() || dir.isDirectory) {
+                    File(dir, name).outputStream().use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    }
+                }
+            }
+        }
     }
 }

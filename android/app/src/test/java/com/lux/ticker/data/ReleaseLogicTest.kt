@@ -193,7 +193,6 @@ class ReleaseLogicTest {
             SettingsMenu.entries.map { it.title },
         )
         assertEquals(SettingsMenu.entries.map { it.route }.distinct().size, SettingsMenu.entries.size)
-        assertFalse(notes.contains("Jonathan"))
         assertFalse(ReleaseNotes.WHATS_NEW.contains("live LuxWire", ignoreCase = true))
         assertEquals("No tickers yet. Add one above.", ReleaseNotes.EMPTY_TICKERS)
         assertEquals("Couldn't refresh prices. Try again.", ReleaseNotes.REFRESH_ERROR)

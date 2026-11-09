@@ -31,7 +31,7 @@ object SettingsMenu {
         SettingsDestination(
             route = "settings/battery",
             title = "Battery",
-            detail = "Always overlay, lock screen only, or manual refresh.",
+            detail = "Price refresh, overlay, and start on boot.",
         ),
         SettingsDestination(
             route = "settings/whats-new",

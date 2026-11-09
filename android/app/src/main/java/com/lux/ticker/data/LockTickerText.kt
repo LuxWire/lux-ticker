@@ -112,9 +112,7 @@ object LockTickerText {
             val start = builder.length
             builder.append(span.text)
             builder.setSpan(
-                ForegroundColorSpan(
-                    TapeColors.forNotification(span.color, theme, night, priceLike = priceLike(span.text)),
-                ),
+                ForegroundColorSpan(TapeColors.forNotification(span.color, theme, night, priceLike(span.text))),
                 start,
                 builder.length,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
@@ -123,11 +121,11 @@ object LockTickerText {
         return builder
     }
 
+    /** Prices, percents, session tags, and the degree mark. A bare ticker is a symbol. */
     private fun priceLike(text: String): Boolean {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return true
-        if (trimmed.any { it.isDigit() }) return true
-        return trimmed == "%" || trimmed == "°" || trimmed == "PRE" || trimmed == "AH" ||
-            trimmed == "·" || trimmed == "…"
+        if (trimmed.any { it.isDigit() } || trimmed.contains('%') || trimmed == "°") return true
+        return trimmed == "PRE" || trimmed == "AH" || trimmed == "·" || trimmed == "…"
     }
 }

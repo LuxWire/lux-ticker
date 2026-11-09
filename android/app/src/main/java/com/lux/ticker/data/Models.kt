@@ -135,6 +135,8 @@ data class TickerSettings(
     /** Bitcoin on the left unless a choice is saved. */
     val pinSide: PinSide = PinSide.LEFT,
     val displayMode: DisplayMode = DisplayMode.ALWAYS,
+    /** Price fetch cadence. Live until a choice is saved, including on upgrade. */
+    val priceRefresh: PriceRefresh = PriceRefresh.LIVE,
     /** Group LuxWire posts. Off unless the key is saved on. */
     val luxWireDigest: Boolean = false,
     /** Subscriber posts open the post. On unless the key is saved off. */

@@ -57,6 +57,7 @@ class SettingsStore(private val data: DataStore<Preferences>) {
     private val themeKey = stringPreferencesKey("strip_theme")
     private val appThemeKey = stringPreferencesKey("app_theme")
     private val modeKey = stringPreferencesKey("display_mode")
+    private val priceRefreshKey = stringPreferencesKey("price_refresh")
     private val digestKey = booleanPreferencesKey("lux_wire_digest")
     private val subscriberKey = booleanPreferencesKey("lux_wire_subscriber")
     private val alertsKey = booleanPreferencesKey("price_alerts")
@@ -150,6 +151,10 @@ class SettingsStore(private val data: DataStore<Preferences>) {
 
     suspend fun setDisplayMode(mode: DisplayMode) = edit { it[modeKey] = mode.name }
 
+    suspend fun setPriceRefresh(refresh: PriceRefresh) = edit { it[priceRefreshKey] = refresh.name }
+
+    suspend fun hasStoredPriceRefresh(): Boolean = data.data.first()[priceRefreshKey] != null
+
     suspend fun setLuxWireDigest(enabled: Boolean) = edit { it[digestKey] = enabled }
 
     suspend fun setLuxWireSubscriber(enabled: Boolean) = edit { it[subscriberKey] = enabled }
@@ -223,6 +228,7 @@ class SettingsStore(private val data: DataStore<Preferences>) {
             prefs[scrollKey] = settings.scrollRightToLeft
             prefs[pinSideKey] = settings.pinSide.name
             prefs[modeKey] = settings.displayMode.name
+            prefs[priceRefreshKey] = settings.priceRefresh.name
             prefs[digestKey] = settings.luxWireDigest
             prefs[subscriberKey] = settings.luxWireSubscriber
             prefs[alertsKey] = settings.priceAlerts
@@ -281,6 +287,7 @@ class SettingsStore(private val data: DataStore<Preferences>) {
                 DisplayMode.MANUAL.name -> DisplayMode.MANUAL
                 else -> fallback.displayMode
             },
+            priceRefresh = PriceRefresh.fromStored(prefs[priceRefreshKey] ?: fallback.priceRefresh.name),
             luxWireDigest = prefs[digestKey] ?: fallback.luxWireDigest,
             luxWireSubscriber = prefs[subscriberKey] ?: fallback.luxWireSubscriber,
             priceAlerts = prefs[alertsKey] ?: fallback.priceAlerts,

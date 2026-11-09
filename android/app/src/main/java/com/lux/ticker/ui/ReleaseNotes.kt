@@ -2,12 +2,17 @@ package com.lux.ticker.ui
 
 object ReleaseNotes {
     const val VERSION = "1.4.11"
-    const val DATED = "October 27, 2026 ET"
+    const val DATED = "November 9, 2026 ET"
     const val PRIVACY_URL = "https://luxwire.github.io/privacy.html"
     const val TERMS_URL = "https://luxwire.github.io/terms.html"
 
     const val WHATS_NEW =
         "1.4\n" +
+            "Thinner, darker notification ticker with centered text for easier reading.\n" +
+            "Price refresh can stay Live or wait 1, 3, 5, 10, or 30 min\n" +
+            "Battery saver closes the live Bitcoin stream\n" +
+            "A minute choice waits out the full interval\n" +
+            "The screen off pause no longer wakes every 2 seconds\n" +
             "The ticker stays directly under the status bar\n" +
             "A restart, rotation, or theme change does not drop it onto the widgets\n" +
             "An update keeps settings that were already saved\n" +

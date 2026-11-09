@@ -8,6 +8,23 @@ import org.junit.Test
 import java.time.Instant
 
 class QuoteParserTest {
+    @Test fun yahooFixtureUsesTheExtendedHoursPrint() {
+        val body = resource("fixtures/yahoo_mstr_chart.json")
+        val quote = YahooChartParser.parse(body, "MSTR", fetchedAtMillis = 1_792_707_400_000)
+        assertEquals("MSTR", quote.symbol)
+        assertEquals("USD", quote.currency)
+        assertEquals(144.897, quote.price, 1e-9)
+        assertEquals(153.48, quote.previousClose!!, 1e-9)
+        assertNotEquals(145.8, quote.price, 0.0)
+        val change = checkNotNull(quote.changePct)
+        val expected = (144.897 - 153.48) / 153.48 * 100.0
+        assertEquals(expected, change, 1e-9)
+        assertEquals(-5.5922595777951525, change, 1e-9)
+        assertEquals(1_792_707_362_000L, quote.asOfMillis)
+        assertEquals(1_792_707_400_000L, quote.fetchedAtMillis)
+        assertTrue(quote.asOfMillis > 1_792_699_201_000L)
+    }
+
     @Test fun yahooSkipsNullClosesAndFallsBackWhenBarsAreMissing() {
         val withNulls = """
             {"chart":{"result":[{"meta":{"currency":"USD","previousClose":10,"chartPreviousClose":10,"regularMarketPrice":11},
@@ -35,13 +52,12 @@ class QuoteParserTest {
     }
 
     @Test fun coinbaseFixtureParsesTheLiveTicker() {
-        // Synthetic ticker frame (made-up numbers, real Coinbase shape).
-        val body = """{"type":"ticker","product_id":"BTC-USD","price":"90000.00","open_24h":"100000.00","time":"2026-10-22T22:23:08.213459Z"}"""
+        val body = resource("fixtures/coinbase_btc_ticker.json")
         val quote = CoinbaseTickerParser.parse(body, fetchedAtMillis = 99)!!
         assertEquals("BTC", quote.symbol)
-        assertEquals(90000.00, quote.price, 0.0)
-        assertEquals(100000.00, quote.previousClose!!, 0.0)
-        val expected = (90000.00 - 100000.00) / 100000.00 * 100.0
+        assertEquals(81259.08, quote.price, 0.0)
+        assertEquals(84367.06, quote.previousClose!!, 0.0)
+        val expected = (81259.08 - 84367.06) / 84367.06 * 100.0
         assertEquals(expected, quote.changePct!!, 1e-9)
         assertEquals("USD", quote.currency)
         assertEquals(Instant.parse("2026-10-22T22:23:08.213459Z").toEpochMilli(), quote.asOfMillis)
@@ -53,4 +69,8 @@ class QuoteParserTest {
         assertNull(CoinbaseTickerParser.parse("not-json", 1))
     }
 
+    private fun resource(path: String): String {
+        val loader = checkNotNull(javaClass.classLoader)
+        return checkNotNull(loader.getResourceAsStream(path)) { path }.bufferedReader().readText()
+    }
 }

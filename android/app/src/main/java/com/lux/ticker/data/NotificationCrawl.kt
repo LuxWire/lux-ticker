@@ -16,4 +16,11 @@ object NotificationCrawl {
 
     /** The shade is not the keyguard. Crawl whenever the screen is on. */
     fun shouldAdvance(screenInteractive: Boolean): Boolean = screenInteractive
+
+    /**
+     * Screen off used to keep the 160 ms timer running and wake the CPU all night.
+     * The crawl sleeps with the idle recheck instead, and does not fetch prices.
+     */
+    fun paceMs(speedDpPerSec: Float, screenInteractive: Boolean): Long =
+        if (screenInteractive) delayMs(speedDpPerSec) else PriceRefreshPace.IDLE_RECHECK_MS
 }

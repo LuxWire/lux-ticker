@@ -4,8 +4,8 @@ import com.lux.ticker.BuildConfig
 
 /**
  * Optional LuxWire account. The project URL and publishable key come from
- * supabase.properties at build time. That file is gitignored. This app does
- * not ship a service-role key and does not include SQL migrations.
+ * supabase.properties at build time. That file is not part of this export.
+ * This app does not ship a service-role key and does not include SQL migrations.
  * Tables are profiles, read-only entitlements, and app_settings. The Windows repo owns that schema.
  */
 object SupabaseConfig {

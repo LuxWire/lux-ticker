@@ -9,7 +9,7 @@
     <color name="lux_wire_body">#FF161412</color>
     <color name="lux_wire_sub">#FF55555A</color>
     <color name="lux_wire_lock_ink">#FF282622</color>
-    <!-- Shade and lock notification (ink band). Same in light and night. -->
+    <!-- Shade and lock ticker. Same ink band in light and night. -->
     <color name="lux_ticker_shade_bg">#FF14130F</color>
     <color name="lux_ticker_shade_edge">#FFEA580C</color>
     <color name="lux_ticker_shade_accent">#FFFFC83D</color>

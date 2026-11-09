@@ -6,12 +6,6 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val keystorePropertiesFile = rootProject.file("keystore/keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
-}
-
 android {
     namespace = "com.lux.ticker"
     compileSdk {
@@ -51,52 +45,10 @@ android {
         buildConfigField("String", "SUPABASE_ANON_KEY", supabaseString("supabase.anonKey"))
     }
 
-    signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
-        }
-    }
-
-    // Play upload builds are signed with a separate upload key. The path is passed in
-    // LUX_UPLOAD_PROPS and is never stored in the repo. Sideload release keeps the original key.
-    val uploadPropsPath = providers.environmentVariable("LUX_UPLOAD_PROPS").orNull
-        ?: providers.gradleProperty("lux.upload.props").orNull
-    val uploadPropsFile = uploadPropsPath?.takeIf { it.isNotBlank() }?.let { file(it) }?.takeIf { it.isFile }
-    if (uploadPropsFile != null) {
-        val uploadProps = Properties().apply {
-            uploadPropsFile.inputStream().use { load(it) }
-        }
-        signingConfigs.create("upload") {
-            storeFile = file(uploadProps.getProperty("storeFile"))
-            storePassword = uploadProps.getProperty("storePassword")
-            keyAlias = uploadProps.getProperty("keyAlias")
-            keyPassword = uploadProps.getProperty("keyPassword")
-        }
-        val releaseBuildType = buildTypes.getByName("release")
-        buildTypes.create("upload") {
-            initWith(releaseBuildType)
-            matchingFallbacks.add("release")
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("upload")
-            // A Play artifact must not embed an X bearer or client id from the build machine.
-            buildConfigField("String", "X_BEARER", "\"\"")
-            buildConfigField("String", "X_CLIENT_ID", "\"\"")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
