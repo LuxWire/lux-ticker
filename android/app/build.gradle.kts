@@ -25,8 +25,8 @@ android {
         applicationId = "com.lux.ticker"
         minSdk = 29
         targetSdk = 37
-        versionCode = 31
-        versionName = "1.4.8"
+        versionCode = 34
+        versionName = "1.4.11"
         // Google and X are enabled on the Supabase project. The buttons use that OAuth.
         buildConfigField("boolean", "ACCOUNT_OAUTH", "true")
         val local = Properties()

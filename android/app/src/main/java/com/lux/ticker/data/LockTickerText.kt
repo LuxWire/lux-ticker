@@ -86,7 +86,7 @@ object LockTickerText {
             val start = builder.length
             builder.append("…")
             builder.setSpan(
-                ForegroundColorSpan(TapeColors.forNotification(TapeColors.DOT, theme, night)),
+                ForegroundColorSpan(TapeColors.forNotification(TapeColors.DOT, theme, night, priceLike = true)),
                 start,
                 builder.length,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
@@ -99,7 +99,7 @@ object LockTickerText {
         val start = builder.length
         builder.append("  ·  ")
         builder.setSpan(
-            ForegroundColorSpan(TapeColors.forNotification(TapeColors.DOT, theme, night)),
+            ForegroundColorSpan(TapeColors.forNotification(TapeColors.DOT, theme, night, priceLike = true)),
             start,
             builder.length,
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
@@ -112,12 +112,22 @@ object LockTickerText {
             val start = builder.length
             builder.append(span.text)
             builder.setSpan(
-                ForegroundColorSpan(TapeColors.forNotification(span.color, theme, night)),
+                ForegroundColorSpan(
+                    TapeColors.forNotification(span.color, theme, night, priceLike = priceLike(span.text)),
+                ),
                 start,
                 builder.length,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
         return builder
+    }
+
+    private fun priceLike(text: String): Boolean {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return true
+        if (trimmed.any { it.isDigit() }) return true
+        return trimmed == "%" || trimmed == "°" || trimmed == "PRE" || trimmed == "AH" ||
+            trimmed == "·" || trimmed == "…"
     }
 }

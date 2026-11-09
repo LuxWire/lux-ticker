@@ -89,30 +89,31 @@ class LockScreenNotificationTest {
         assertEquals(Notification.VISIBILITY_PUBLIC, service.visibility)
         val secret = LockScreenNotifications.build(context, tape, showOnLockScreen = false)
         assertEquals(Notification.VISIBILITY_SECRET, secret.visibility)
-        assertEquals(TapeColors.PAPER, (root.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.BG, (root.background as android.graphics.drawable.ColorDrawable).color)
         val spans = (btc.text as Spanned).getSpans(0, btc.text.length, ForegroundColorSpan::class.java)
         val colors = spans.map { it.foregroundColor }.toSet()
-        assertTrue(colors.contains(TapeColors.SYMBOL))
-        assertTrue(colors.contains(TapeColors.LOCK_INK))
-        assertTrue(colors.contains(PaperPalette.GAIN))
+        assertTrue(colors.contains(ShadePalette.SYMBOL))
+        assertTrue(colors.contains(ShadePalette.INK))
+        assertTrue(colors.contains(ShadePalette.GAIN))
         assertFalse(colors.contains(TapeColors.UP))
         assertFalse(colors.contains(TapeColors.PRICE))
+        assertFalse(colors.contains(PaperPalette.GAIN))
         val dark = LockScreenNotifications.build(context, tape, theme = StripTheme.DARK)
         val darkRoot = dark.contentView.apply(host, host.findViewById(android.R.id.content))
-        assertEquals(TapeColors.BG, (darkRoot.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.BG, (darkRoot.background as android.graphics.drawable.ColorDrawable).color)
         val darkColors = (darkRoot.findViewById<TextView>(R.id.lock_btc).text as Spanned)
             .getSpans(0, darkRoot.findViewById<TextView>(R.id.lock_btc).text.length, ForegroundColorSpan::class.java)
             .map { it.foregroundColor }
             .toSet()
-        assertTrue(darkColors.contains(TapeColors.PRICE))
-        assertTrue(darkColors.contains(TapeColors.UP))
+        assertTrue(darkColors.contains(ShadePalette.INK))
+        assertTrue(darkColors.contains(ShadePalette.GAIN))
         val bigRoot = big.apply(host, host.findViewById(android.R.id.content))
-        assertEquals(TapeColors.PAPER, (bigRoot.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.BG, (bigRoot.background as android.graphics.drawable.ColorDrawable).color)
 
         val pinnedRight = LockScreenNotifications.build(context, tape, pinOnRight = true)
         assertEquals(R.layout.notification_lock_ticker_right, pinnedRight.contentView.layoutId)
         val rightRoot = pinnedRight.contentView.apply(host, host.findViewById(android.R.id.content))
-        assertEquals(TapeColors.PAPER, (rightRoot.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.BG, (rightRoot.background as android.graphics.drawable.ColorDrawable).color)
 
         val moved = LockScreenNotifications.build(context, tape, charOffset = 24)
         val movedRoot = moved.contentView.apply(host, host.findViewById(android.R.id.content))
@@ -121,14 +122,15 @@ class LockScreenNotificationTest {
         assertTrue(movedBtc.text.toString().contains("BTC"))
         assertNotEquals(tapeView.text.toString(), movedTape.text.toString())
         assertFalse(LockScreenNotifications.nightMode(context))
-        assertEquals(TapeColors.PAPER, context.getColor(R.color.lux_ticker_shade_bg))
-        assertEquals(TapeColors.SYMBOL, context.getColor(R.color.lux_ticker_shade_accent))
-        assertEquals(TapeColors.LOCK_INK, context.getColor(R.color.lux_ticker_shade_ink))
+        assertEquals(ShadePalette.BG, context.getColor(R.color.lux_ticker_shade_bg))
+        assertEquals(ShadePalette.SYMBOL, context.getColor(R.color.lux_ticker_shade_accent))
+        assertEquals(ShadePalette.INK, context.getColor(R.color.lux_ticker_shade_ink))
+        assertEquals(ShadePalette.EDGE, context.getColor(R.color.lux_ticker_shade_edge))
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun nightShadeUsesNavyEvenWhenTheAppThemeIsPaper() {
+    fun nightShadeUsesInkBandEvenWhenTheAppThemeIsPaper() {
         val context = RuntimeEnvironment.getApplication()
         assertTrue(LockScreenNotifications.nightMode(context))
         assertEquals(ShadePalette.BG, context.getColor(R.color.lux_ticker_shade_bg))
@@ -158,7 +160,7 @@ class LockScreenNotificationTest {
         val root = notification.contentView.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (root.background as android.graphics.drawable.ColorDrawable).color)
         val accent = root.findViewById<TextView>(R.id.lock_accent)
-        assertEquals(ShadePalette.SYMBOL, (accent.background as android.graphics.drawable.ColorDrawable).color)
+        assertEquals(ShadePalette.EDGE, (accent.background as android.graphics.drawable.ColorDrawable).color)
         val btc = root.findViewById<TextView>(R.id.lock_btc)
         val colors = (btc.text as Spanned).getSpans(0, btc.text.length, ForegroundColorSpan::class.java)
             .map { it.foregroundColor }
@@ -182,6 +184,6 @@ class LockScreenNotificationTest {
         val right = LockScreenNotifications.build(context, tape, pinOnRight = true, theme = StripTheme.LIGHT)
         val rightRoot = right.contentView.apply(host, host.findViewById(android.R.id.content))
         assertEquals(ShadePalette.BG, (rightRoot.background as android.graphics.drawable.ColorDrawable).color)
-        assertEquals(ShadePalette.SYMBOL, notification.color)
+        assertEquals(ShadePalette.EDGE, notification.color)
     }
 }

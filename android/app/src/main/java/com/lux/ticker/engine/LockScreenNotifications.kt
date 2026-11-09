@@ -58,7 +58,7 @@ object LockScreenNotifications {
         }
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_ticker)
-            .setColor(if (night) ShadePalette.SYMBOL else TapeColors.SYMBOL)
+            .setColor(ShadePalette.EDGE)
             .setContentTitle(LockTickerText.coloredPinned(tape, theme, night))
             .setContentText(fallback)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
@@ -95,7 +95,7 @@ object LockScreenNotifications {
     ): RemoteViews {
         return RemoteViews(context.packageName, layout).apply {
             setInt(R.id.lock_root, "setBackgroundColor", TapeColors.notificationBand(theme, night))
-            setInt(R.id.lock_accent, "setBackgroundColor", TapeColors.forNotification(TapeColors.SYMBOL, theme, night))
+            setInt(R.id.lock_accent, "setBackgroundColor", ShadePalette.EDGE)
             setTextViewText(R.id.lock_btc, LockTickerText.coloredPinned(tape, theme, night))
             setTextViewText(R.id.lock_tape, LockTickerText.coloredCrawled(tape, charOffset, theme, night))
         }

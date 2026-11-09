@@ -1,3 +1,9 @@
+# LuxWire Ticker 1.4.11
+
+Package `com.lux.ticker`. versionCode 34. The shade and lock-screen ticker use an ink band in light and night, with the text centered in a thinner row. A saved color that is under 4.5:1 on that band falls back. In-app strip themes are unchanged, and saved settings stay. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.
+
+This public tree carries the 1.4.11 notification band changes on the previously published 1.4.8 sources. Battery / price-refresh code from 1.4.9–1.4.10 is not in this mirror yet.
+
 # LuxWire Ticker 1.4.8
 
 Installs over 1.4.7. Package `com.lux.ticker`. versionCode 31. The ticker stays directly under the status bar. A restart, rotation, theme change, lock screen, or service restart does not add that bar a second time. A gap under the bar is added only when one was already saved. Privacy is `https://luxwire.github.io/privacy.html` and Terms are `https://luxwire.github.io/terms.html`.

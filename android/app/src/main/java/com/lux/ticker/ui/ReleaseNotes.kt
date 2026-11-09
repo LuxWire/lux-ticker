@@ -1,7 +1,7 @@
 package com.lux.ticker.ui
 
 object ReleaseNotes {
-    const val VERSION = "1.4.8"
+    const val VERSION = "1.4.11"
     const val DATED = "October 27, 2026 ET"
     const val PRIVACY_URL = "https://luxwire.github.io/privacy.html"
     const val TERMS_URL = "https://luxwire.github.io/terms.html"

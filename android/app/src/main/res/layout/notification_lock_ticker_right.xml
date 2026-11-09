@@ -2,19 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/lock_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@color/lux_ticker_shade_bg"
     android:gravity="center_vertical"
-    android:minHeight="40dp"
     android:orientation="horizontal"
-    android:paddingTop="6dp"
-    android:paddingEnd="8dp"
-    android:paddingBottom="6dp">
+    android:paddingStart="8dp">
 
     <TextView
         android:id="@+id/lock_tape"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:layout_weight="1"
         android:ellipsize="marquee"
         android:focusable="true"
@@ -32,6 +30,7 @@
         android:id="@+id/lock_btc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:layout_marginStart="8dp"
         android:ellipsize="end"
         android:fontFamily="@font/jetbrains_mono_bold"
@@ -42,11 +41,11 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/lock_accent"
         android:layout_width="4dp"
-        android:layout_height="28dp"
+        android:layout_height="16dp"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="8dp"
-        android:id="@+id/lock_accent"
-        android:background="@color/lux_ticker_shade_accent"
+        android:background="@color/lux_ticker_shade_edge"
         android:text="" />
 </LinearLayout>

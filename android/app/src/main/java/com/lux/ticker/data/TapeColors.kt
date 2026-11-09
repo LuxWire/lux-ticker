@@ -64,38 +64,54 @@ object TapeColors {
     fun forLockTicker(color: Int, theme: StripTheme = StripTheme.PAPER): Int = forStrip(color, theme)
 
     /**
-     * Shade and lock notification. Night follows the phone, not the in-app theme,
-     * so a paper setting still goes navy when the system is dark.
+     * Shade and lock notification band. Always the ink band (Maven option A),
+     * in light and night. In-app strip themes are unchanged.
      */
-    fun notificationBand(theme: StripTheme, night: Boolean): Int =
-        if (night) ShadePalette.BG else band(theme)
+    fun notificationBand(theme: StripTheme, night: Boolean): Int = ShadePalette.BG
 
-    fun forNotification(color: Int, theme: StripTheme, night: Boolean): Int =
-        if (night) ShadePalette.map(color) else forLockTicker(color, theme)
+    fun forNotification(
+        color: Int,
+        theme: StripTheme,
+        night: Boolean,
+        priceLike: Boolean = false,
+    ): Int = ShadePalette.place(color, priceLike)
 }
 
 /**
- * Pull-down tape when the phone is in night mode.
- * Every swatch is at least 4.5:1 against [BG].
+ * Shade and lock notification palette (ink band).
+ * Every named swatch is at least 4.5:1 against [BG].
+ * A saved custom color under 4.5:1 falls back in [place].
  */
 object ShadePalette {
-    const val BG = 0xFF0E1520.toInt()
-    const val SYMBOL = 0xFFFFD15C.toInt()
+    const val BG = 0xFF14130F.toInt()
+    const val EDGE = 0xFFEA580C.toInt()
+    const val SYMBOL = 0xFFFFC83D.toInt()
     const val INK = 0xFFF4EFE4.toInt()
-    const val GAIN = 0xFF7DFFA3.toInt()
-    const val LOSS = 0xFFFF8A80.toInt()
-    const val MUTED = 0xFFC8C0B4.toInt()
+    const val GAIN = 0xFF4ADE80.toInt()
+    const val LOSS = 0xFFFF6B6B.toInt()
+    const val MUTED = 0xFFB7AFA3.toInt()
     const val DOT = 0xFFB7AFA3.toInt()
 
-    fun map(color: Int): Int = when (color) {
-        TapeColors.SYMBOL -> SYMBOL
-        TapeColors.PRICE, TapeColors.TAG -> INK
-        TapeColors.UP -> GAIN
-        TapeColors.DOWN -> LOSS
-        TapeColors.FLAT, TapeColors.MUTED -> MUTED
-        TapeColors.DOT -> DOT
-        TapeColors.BG -> BG
-        else -> color
+    fun map(color: Int): Int = place(color, priceLike = false)
+
+    fun place(color: Int, priceLike: Boolean): Int {
+        val mapped = when (color) {
+            TapeColors.SYMBOL -> SYMBOL
+            TapeColors.PRICE, TapeColors.TAG -> INK
+            TapeColors.UP -> GAIN
+            TapeColors.DOWN -> LOSS
+            TapeColors.FLAT, TapeColors.MUTED, TapeColors.DOT -> MUTED
+            TapeColors.BG -> BG
+            else -> null
+        }
+        if (mapped != null) return mapped
+        return if (Wcag.ratio(color, BG) >= Wcag.BODY_TEXT) {
+            color
+        } else if (priceLike) {
+            INK
+        } else {
+            SYMBOL
+        }
     }
 }
 

@@ -139,8 +139,8 @@ class AccountSyncTest {
 
     @Test fun oauthButtonsAreOnAndTheClientKeyIsPublishable() {
         assertTrue(BuildConfig.ACCOUNT_OAUTH)
-        assertEquals("1.4.8", BuildConfig.VERSION_NAME)
-        assertEquals(31, BuildConfig.VERSION_CODE)
+        assertEquals("1.4.11", BuildConfig.VERSION_NAME)
+        assertEquals(34, BuildConfig.VERSION_CODE)
         assertEquals("https://luxwire.github.io/privacy.html", ReleaseNotes.PRIVACY_URL)
         assertEquals("https://luxwire.github.io/terms.html", ReleaseNotes.TERMS_URL)
         assertEquals(BuildConfig.SUPABASE_URL, SupabaseConfig.URL)

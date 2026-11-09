@@ -149,7 +149,7 @@ fun SettingsMenuRoute(onBack: () -> Unit, onOpen: (String) -> Unit) {
             title = { Text("Reset everything?") },
             text = {
                 Text(
-                    "Every setting goes back to the 1.4.8 defaults. Speed is 50 dp/s. Vertical position sits directly under the status bar. Pre and AH stay on. Chart haptics stay on. Saved price alerts are cleared. Your tickers and X sign-in stay.",
+                    "Every setting goes back to the factory defaults. Speed is 50 dp/s. Vertical position sits directly under the status bar. Pre and AH stay on. Chart haptics stay on. Saved price alerts are cleared. Your tickers and X sign-in stay.",
                 )
             },
             confirmButton = {
